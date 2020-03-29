@@ -1,0 +1,31 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: jupyterhub-shared2
+  namespace: jhub
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  mountOptions:
+    - nolock
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: 192.168.170.20
+    path: "/datasets"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: jupyterhub-shared-volume2
+  namespace: jhub
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 50Gi

@@ -20,6 +20,44 @@ hub:
 proxy:
   secretToken: "0c1a22d09318601f135374cab05983fca890a5c5dc2ab9c1f298377e06eaf588"
 
+
+  service:
+    type: LoadBalancer
+    labels: {}
+    annotations: {}
+    nodePorts:
+      http:
+      https:
+    loadBalancerIP:
+  chp:
+    image:
+      name: jupyterhub/configurable-http-proxy
+      tag: 3.0.0
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+  nginx:
+    image:
+      name: quay.io/kubernetes-ingress-controller/nginx-ingress-controller
+      tag: 0.15.0
+      pullPolicy: IfNotPresent
+    proxyBodySize: 64m
+    resources: {}
+  networkPolicy:
+    enabled: false
+    egress:
+      - to:
+          - ipBlock:
+              cidr: 0.0.0.0/0
+
+
+
+
+
+
+
 auth:
   type: dummy
   whitelist:
@@ -43,16 +81,32 @@ singleuser:
     image:
       name: jupyterhub/k8s-network-tools
       tag: '0.8.2' 
+    cloudMetadata:
+    enabled: false
+    ip: 169.254.169.254
+  networkPolicy:
+    enabled: false
+    egress:
+      - to:
+          - ipBlock:
+              cidr: 0.0.0.0/0
+              except:
+                - 169.254.169.254/32
+  events: true
+  extraAnnotations: {}
+  extraLabels:
+    hub.jupyter.org/network-access-hub: 'true'
+
 
 
   storage:
     type: dynamic
     extraVolumes:
-      - name: jupyterhub-shared1
+      - name: jupyterhub-shared2
         persistentVolumeClaim:
-          claimName: jupyterhub-shared-volume1
+          claimName: jupyterhub-shared-volume2
     extraVolumeMounts:
-      - name: jupyterhub-shared1
+      - name: jupyterhub-shared2
         mountPath: /shared-datasets
  
     static:
@@ -71,9 +125,10 @@ singleuser:
 #singleuser:  old location
 
   image: # custom image that contains a set of pre-installed libraries and tools
-  #  name: kiwistorageguy/c7-rapidfile
+ #   name: kiwistorageguy/c7-rapidfile
+  #  tag: latest
     name: emilypotyraj/pure-k8s-singleuser
-    tag: latest
+    tag: centos
     pullPolicy: IfNotPresent
   imagePullSecret:   #newly added code
     enabled: false
