@@ -1,8 +1,8 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: jupyterhub-shared2
-  namespace: jhub
+  name: jupyterhub-shared2    #edit to suit your naming convention
+  namespace: jhub             #edit to suit namespace of choice
   labels:
     type: local
 spec:
@@ -10,22 +10,22 @@ spec:
   mountOptions:
     - nolock
   capacity:
-    storage: 50Gi
+    storage: 50Gi             #edit to suit size of filesystem 
   accessModes:
     - ReadWriteMany
   nfs:
-    server: 192.168.170.20
-    path: "/datasets"
+    server: 192.168.170.20    #edit to suit datavip to mount to
+    path: "/datasets"         #edit to suit filesystem on FlashBlade
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: jupyterhub-shared-volume2
-  namespace: jhub
+  name: jupyterhub-shared-volume2   #edit to suit PVC name
+  namespace: jhub                   #edit to suit namespace of choice
 spec:
   storageClassName: manual
   accessModes:
     - ReadWriteMany
   resources:
     requests:
-      storage: 50Gi
+      storage: 50Gi                 #edit to suit size of filesystem
