@@ -94,7 +94,88 @@ Once its installed you can watch the install to see once its complete.
 Takes a few minutes to download all the images called in the config file
 
 ```
-install text here
+aparsons@k8kube01:~/jupyterhub$ ./jhubinstall.sh
+Release "jhub" does not exist. Installing it now.
+NAME:   jhub
+LAST DEPLOYED: Tue Mar 31 20:12:41 2020
+NAMESPACE: jhub
+STATUS: DEPLOYED
+
+RESOURCES:
+==> v1/ConfigMap
+NAME        DATA  AGE
+hub-config  1     0s
+
+==> v1/Deployment
+NAME   READY  UP-TO-DATE  AVAILABLE  AGE
+hub    0/1    1           0          0s
+proxy  0/1    1           0          0s
+
+==> v1/PersistentVolumeClaim
+NAME        STATUS   VOLUME  CAPACITY  ACCESS MODES  STORAGECLASS  AGE
+hub-db-dir  Pending  0s
+
+==> v1/Pod(related)
+NAME                    READY  STATUS             RESTARTS  AGE
+hub-7555d5f65-8qm7c     0/1    Pending            0         0s
+proxy-79b5b8786f-jqhzd  0/1    ContainerCreating  0         0s
+proxy-79b5b8786f-mmskn  1/1    Terminating        0         17h
+
+==> v1/Role
+NAME  AGE
+hub   0s
+
+==> v1/RoleBinding
+NAME  AGE
+hub   0s
+
+==> v1/Secret
+NAME        TYPE    DATA  AGE
+hub-secret  Opaque  2     0s
+
+==> v1/Service
+NAME          TYPE          CLUSTER-IP      EXTERNAL-IP  PORT(S)                     AGE
+hub           ClusterIP     10.102.108.236  <none>       8081/TCP                    0s
+proxy-api     ClusterIP     10.106.205.226  <none>       8001/TCP                    0s
+proxy-public  LoadBalancer  10.100.34.243   10.226.228.251    80:30402/TCP,443:31806/TCP  0s
+
+==> v1/ServiceAccount
+NAME  SECRETS  AGE
+hub   1        0s
+
+==> v1/StatefulSet
+NAME              READY  AGE
+user-placeholder  0/0    0s
+
+==> v1beta1/PodDisruptionBudget
+NAME              MIN AVAILABLE  MAX UNAVAILABLE  ALLOWED DISRUPTIONS  AGE
+hub               1              N/A              0                    0s
+proxy             1              N/A              0                    0s
+user-placeholder  0              N/A              0                    0s
+user-scheduler    1              N/A              0                    0s
+
+
+NOTES:
+Thank you for installing JupyterHub!
+
+Your release is named jhub and installed into the namespace jhub.
+
+You can find if the hub and proxy is ready by doing:
+
+ kubectl --namespace=jhub get pod
+
+and watching for both those pods to be in status 'Ready'.
+
+You can find the public IP of the JupyterHub by doing:
+
+ kubectl --namespace=jhub get svc proxy-public
+
+It might take a few minutes for it to appear!
+
+Note that this is still an alpha release! If you have questions, feel free to
+  1. Read the guide at https://z2jh.jupyter.org
+  2. Chat with us at https://gitter.im/jupyterhub/jupyterhub
+  3. File issues at https://github.com/jupyterhub/zero-to-jupyterhub-k8s/issues
 ```
 ## Install python Patch
 Next we need to run the patch script and or apply the python patch
