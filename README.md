@@ -24,12 +24,24 @@ Clone this repo. edit the var files to suit your install
 edit the config file to suite your needs
 there are many ways to setup authentication using git or ad. Refer to Jupyterhub documentation to suite your choices. 
 
-You need to edit the key
-```
-key here
+You can clone this repo
+``
+git clone https://github.com/opslounge/jupyterhub.git
 ```
 
-next edit the storage to suite your naming convention
+Next generate a hex key to be used in the config file
+```
+proxy:
+  secretToken: "<RANDOM_HEX>"
+```
+Paste under proxy secret token
+```
+proxy:
+  secretToken: "TOKEN-HERE"
+```
+
+
+Lets setup the Dataset path to be used (this will bind to your PV you will create later)
 ```
   storage:
     type: dynamic
@@ -41,6 +53,23 @@ next edit the storage to suite your naming convention
       - name: jupyterhub-shared2
         mountPath: /shared-datasets
 ```
+You can also define the flashblade for your user scratch/home directories as shown
+
+```
+static:
+      pvcName:
+      subPath: /home/{username}   # user home directory
+      type: static
+      uid: 0
+    capacity: 10Gi
+    homeMountPath: /home/jovyan
+    dynamic:   # set FlashBlade as the storage target for PVCs of user environments
+      storageClass: pure-file   # storage class created in the cluster
+      pvcNameTemplate: claim-{username}{servername}
+      volumeNameTemplate: volume-{username}{servername}
+      storageAccessModes: [ReadWriteMany]
+```
+
 
 Now lets install Jupyterhub
 
@@ -62,10 +91,28 @@ Takes a few minutes to download all the images called in the config file
 ```
 install text here
 ```
+## Install python Patch
+Next we need to run the patch script and or apply the python patch
+to address bugs with spawner code [spawner bug]( https://github.com/jupyterhub/kubespawner/issues/354)
+
+```
+aparsons@k8kube01:~/jupyterhub$ ./patch.sh
+deployment.extensions/hub patched
+```
+
+```
+kubectl patch deploy -n jhub hub --type json --patch '[{"op": "replace", "path": "/spec/template/spec/containers/0/command", "value": ["bash", "-c", "\nmkdir -p ~/hotfix\ncp -r /usr/local/lib/python3.6/dist-packages/kubespawner ~/hotfix\nls -R ~/hotfix\npatch ~/hotfix/kubespawner/spawner.py << EOT\n72c72\n<             key=lambda x: x.last_timestamp,\n---\n>             key=lambda x: x.last_timestamp and x.last_timestamp.timestamp() or 0.,\nEOT\n\nPYTHONPATH=$HOME/hotfix jupyterhub --config /srv/jupyterhub_config.py --upgrade-db\n"]}]'
+```
 
 
+## Setup Dataset volume
 
-You first need to edit the jhubpvc.yaml to represent variables in your environment
+
+You need to edit the jhubpvc.yaml to represent variables in your environment
+to begin you will need the following: 
+- FlashBlade Data VIP
+- filesystem
+
 
 ```
 kind: PersistentVolume
@@ -107,6 +154,27 @@ spec:
 ```
 kubectl create -f jhubpvc.yaml
 ```
+```
+aparsons@k8kube01:~/jupyterhub$ kubectl create -f jhubpvc.yaml
+persistentvolume/jupyterhub-shared2 created
+persistentvolumeclaim/jupyterhub-shared-volume2 created
+aparsons@k8kube01:~/jupyterhub$ kubectl get pvc -n jhub
+NAME                        STATUS    VOLUME               CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+jupyterhub-shared-volume2   Bound     jupyterhub-shared2   50Gi       RWX            manual         101s
+
+```
+
+At this point Jupyterhub should be ready for deployment. 
+
+To get the public address 
+```
+kubectl --namespace=jhub get svc proxy-public
+NAME           TYPE           CLUSTER-IP    EXTERNAL-IP      PORT(S)                      AGE
+proxy-public   LoadBalancer   20.0.26.168   10.226.228.251   80:30589/TCP,443:30165/TCP   15h
+```
+
+Users should now be able to browse jupyterhub
+
 
 
 ## Authors
