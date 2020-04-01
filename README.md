@@ -24,17 +24,21 @@ Clone this repo. edit the var files to suit your install
 edit the config file to suite your needs
 there are many ways to setup authentication using git or ad. Refer to Jupyterhub documentation to suite your choices. 
 
-You can clone this repo
-``
+Clone the repo
+
+```
 git clone https://github.com/opslounge/jupyterhub.git
 ```
 
 Next generate a hex key to be used in the config file
+
 ```
 proxy:
   secretToken: "<RANDOM_HEX>"
 ```
+
 Paste under proxy secret token
+
 ```
 proxy:
   secretToken: "TOKEN-HERE"
@@ -42,6 +46,7 @@ proxy:
 
 
 Lets setup the Dataset path to be used (this will bind to your PV you will create later)
+
 ```
   storage:
     type: dynamic
