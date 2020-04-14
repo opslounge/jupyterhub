@@ -5,7 +5,7 @@ Install Juypterhub in k8s on Flashblade
 ## Getting Started
 
 These instructions will help you setup PVCs to point to Flashblade, and install 
-Jupyterhub using these installs
+Jupyterhub 
 
 ### Prerequisites
 
@@ -19,16 +19,23 @@ Clone this repo. edit the var files to suit your install
 - k8s cluster
 
 
-### Installing
+### Get Jupyterhub
 
-edit the config file to suite your needs
-there are many ways to setup authentication using git or ad. Refer to Jupyterhub documentation to suite your choices. 
+You need to add the helm chart for JupyterHub
 
-Clone the repo
+Add/update the helm repo for JupyterHub
 
 ```
-git clone https://github.com/opslounge/jupyterhub.git
+helm repo add jupyterhub https://jupyterhub.github.io/helm-chart/
+helm repo update
 ```
+
+Create a config.yaml to configure your JupyterHub installation. 
+
+You can use this sample by cloning this repo JHUB i[Jupyterhub](https://github.com/opslounge/jupyterhub.git)
+
+There are many ways to setup authentication using git or ad. Refer to Jupyterhub documentation to suite your choices. 
+
 
 Next generate a hex key to be used in the config file
 
@@ -79,19 +86,13 @@ static:
 Now lets install Jupyterhub
 
 ```
-./jhubinstall.sh
-```
-
-You can also run it manually as seen below 
-```
 helm upgrade --install jhub jupyterhub/jupyterhub \
   --namespace jhub  \
   --version=0.8.2 \
   --values config.yaml
 ```
 
-Once its installed you can watch the install to see once its complete. 
-Takes a few minutes to download all the images called in the config file
+Install Takes a few minutes to download all the images called in the config file
 
 ```
 aparsons@k8kube01:~/jupyterhub$ ./jhubinstall.sh
@@ -177,14 +178,10 @@ Note that this is still an alpha release! If you have questions, feel free to
   2. Chat with us at https://gitter.im/jupyterhub/jupyterhub
   3. File issues at https://github.com/jupyterhub/zero-to-jupyterhub-k8s/issues
 ```
-## Install python Patch
+## Install python Patch (when using in Centos Environment)
 Next we need to run the patch script and or apply the python patch
 to address bugs with spawner code [spawner bug]( https://github.com/jupyterhub/kubespawner/issues/354)
 
-```
-aparsons@k8kube01:~/jupyterhub$ ./patch.sh
-deployment.extensions/hub patched
-```
 
 ```
 kubectl patch deploy -n jhub hub --type json --patch '[{"op": "replace", "path": "/spec/template/spec/containers/0/command", "value": ["bash", "-c", "\nmkdir -p ~/hotfix\ncp -r /usr/local/lib/python3.6/dist-packages/kubespawner ~/hotfix\nls -R ~/hotfix\npatch ~/hotfix/kubespawner/spawner.py << EOT\n72c72\n<             key=lambda x: x.last_timestamp,\n---\n>             key=lambda x: x.last_timestamp and x.last_timestamp.timestamp() or 0.,\nEOT\n\nPYTHONPATH=$HOME/hotfix jupyterhub --config /srv/jupyterhub_config.py --upgrade-db\n"]}]'
